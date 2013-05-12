@@ -5,34 +5,37 @@ Template tags for Django
 from django import template
 from django.core.urlresolvers import reverse
 from django.utils.translation import ugettext_lazy as _
+from django.contrib.contenttypes.models import ContentType
 
 register = template.Library()
 
 @register.tag(name="ajax_add_notice")
 def do_ajax_add_notice(parser, token):
+    
     try:
         # split_contents() knows not to split quoted strings.
-        tag_name, object_type, object_id = token.split_contents()
+        tag_name, obj = token.split_contents()
         
     except ValueError:
-        raise template.TemplateSyntaxError("%r tag requires 2 arguments" % token.contents.split()[0])
-    if not (object_type[0] == object_type[-1] and object_type[0] in ('"', "'")):
-        raise template.TemplateSyntaxError("%r tag's first argument should be in quotes" % tag_name)
-    return AjaxNoticeNode(object_type[1:-1], object_id)
+        raise template.TemplateSyntaxError("%r tag requires 1 argument" % token.contents.split()[0])
+    return AjaxNoticeNode(obj)
 
 
 class AjaxNoticeNode(template.Node):
     
-    def __init__(self, object_type, object_id):
-        self.object_type = object_type
-        self.object_id = template.Variable(object_id)
+    def __init__(self, obj):
+        self.obj = template.Variable(obj)
     
     def render(self, context):
         try:
-            object_id = self.object_id.resolve(context)
+            obj = self.obj.resolve(context)
         except template.VariableDoesNotExist:
             return ''
-        object_type = self.object_type
+        
+        ctype = ContentType.objects.get_for_model(obj)
+        object_type = ctype.model
+        object_id = obj.id
+
         title = _(u'Found error?')
         action = reverse('ajax_notice_add', args=[object_type, object_id])
         html = '<a href="" class="dot hide add_new" data-add-div="notice-create-%s-%s" data-action="%s">%s</a> \

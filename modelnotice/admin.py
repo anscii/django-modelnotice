@@ -3,7 +3,6 @@ from models import Notice
 
 class NoticeAdmin(admin.ModelAdmin):
     list_display = ('content_object', 'text', 'user', 'email')
-    list_filter = ('content_type',)
-    list_display_links = ('content_object','user')
+    list_display_links = ('content_object',)
 
 admin.site.register(Notice, NoticeAdmin)
