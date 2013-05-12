@@ -1,0 +1,34 @@
+{% load i18n %}
+
+<form action="{{ action }}" method="post" class="dashform" id="add_new_object_form">{% csrf_token %}
+     
+    {{ form.as_div }}	
+	
+	<input type="submit" name="add" value="{% trans 'Add' %}" id="add_new_btn"/>	
+</form>
+
+<script>
+	$(document).ready(function() { 
+		$('#add_new_object_form').ajaxForm({
+		            success: function(data, statusText, xhr, $form) {
+		            	
+		                // Remove errors
+		                $form.find('.error').remove();
+		                
+		                if (data['result'] == 'success') {
+		                	parent = $form.parent('div');
+		                    $form.replaceWith(data['response']);
+		                    parent.hide(2000,function() {
+												    $(this).empty();
+												  });
+		                   
+		                }
+		                else if (data['result'] == 'error') {
+		                    // Show errors
+		                    $form.replaceWith(data['response']);
+		                }
+		            },
+		           
+		        });
+	});
+</script>
